@@ -196,6 +196,7 @@ public class MainScreen extends Screen {
                     connection = new Socket();
                     Palm.getInst().connection = connection;
                     connection.connect(new InetSocketAddress(ip, port), 12000);
+                    if(connection.isClosed()) return;
                     hexArea.setEnabled(true);
                     sendButton.setEnabled(true);
                     console.success("Connected to server");
