@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+group 'net.jay'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+    implementation 'com.github.saruman9:darcula-laf:2019.09'
+}
