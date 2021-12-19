@@ -26,7 +26,9 @@ import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
@@ -183,14 +185,17 @@ public class MainScreen extends Screen {
             }
 
             connectButton.setEnabled(false);
+            disconnectButton.setEnabled(true);
+            ipField.setEnabled(false);
+            portField.setEnabled(false);
 
             Palm.getInst().addTask(() -> {
                 Socket connection = null;
                 try {
                     boolean running = true;
-                    connection = new Socket(ip, port);
+                    connection = new Socket();
                     Palm.getInst().connection = connection;
-                    disconnectButton.setEnabled(true);
+                    connection.connect(new InetSocketAddress(ip, port), 12000);
                     hexArea.setEnabled(true);
                     sendButton.setEnabled(true);
                     console.success("Connected to server");
@@ -210,9 +215,13 @@ public class MainScreen extends Screen {
                     }
                 } catch(Exception exception) {
                     exception.printStackTrace();
-                    if(exception.getMessage().contains("timed out")) console.error("Couldn't connect to server: Timed out");
-                    console.error("Couldn't connect to server: Exception thrown");
+                    if(exception.getMessage().contains("Socket closed")) {}
+                    else if(exception.getMessage().contains("timed out")) console.error("Couldn't connect to server: Timed out");
+                    else if(exception instanceof UnknownHostException) console.error("Couldn't connect to server: Unknown host");
+                    else console.error("Couldn't connect to server: Exception thrown");
                     connectButton.setEnabled(true);
+                    ipField.setEnabled(true);
+                    portField.setEnabled(true);
                     disconnectButton.setEnabled(false);
                     hexArea.setEnabled(false);
                     sendButton.setEnabled(false);
@@ -244,6 +253,16 @@ public class MainScreen extends Screen {
 
                 console.log("Sending data: " + Arrays.toString(data));
             } catch (IOException ex) {
+                if(ex.getMessage().contains("Connection reset")) {
+                    connectButton.setEnabled(true);
+                    ipField.setEnabled(true);
+                    portField.setEnabled(true);
+                    disconnectButton.setEnabled(false);
+                    hexArea.setEnabled(false);
+                    sendButton.setEnabled(false);
+                    console.error("Server ended connection");
+                    return;
+                }
                 ex.printStackTrace();
                 console.error("Error sending data: Exception thrown");
             }
@@ -258,6 +277,8 @@ public class MainScreen extends Screen {
 
             Palm.getInst().connection = null;
             connectButton.setEnabled(true);
+            ipField.setEnabled(true);
+            portField.setEnabled(true);
             disconnectButton.setEnabled(false);
             hexArea.setEnabled(false);
             sendButton.setEnabled(false);
